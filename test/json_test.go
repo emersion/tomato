@@ -20,32 +20,32 @@ func TestJsonNumber(t *testing.T) {
   q5_3 := tomato.NewState()
   q6 := tomato.NewState()
 
-  q0.Add(transition.NewRune('-', q1))
-  q0.Add(transition.NewEpsilon(q1))
+  q0.AddFunc(transition.Rune('-'), q1)
+  q0.AddFunc(transition.Epsilon(), q1)
 
-  q1.Add(transition.NewRune('0', q2))
-  q1.Add(transition.NewRegexp("[1-9]", q1_1))
+  q1.AddFunc(transition.Rune('0'), q2)
+  q1.AddFunc(transition.Regexp("[1-9]"), q1_1)
 
-  q1_1.Add(transition.NewRegexp("[0-9]", q1_1))
-  q1_1.Add(transition.NewEpsilon(q2))
+  q1_1.AddFunc(transition.Regexp("[0-9]"), q1_1)
+  q1_1.AddFunc(transition.Epsilon(), q2)
 
-  q2.Add(transition.NewEpsilon(q5))
-  q2.Add(transition.NewRune('.', q3))
+  q2.AddFunc(transition.Epsilon(), q5)
+  q2.AddFunc(transition.Rune('.'), q3)
 
-  q3.Add(transition.NewRegexp("[0-9]", q4))
+  q3.AddFunc(transition.Regexp("[0-9]"), q4)
 
-  q4.Add(transition.NewRegexp("[0-9]", q4))
-  q4.Add(transition.NewEpsilon(q5))
+  q4.AddFunc(transition.Regexp("[0-9]"), q4)
+  q4.AddFunc(transition.Epsilon(), q5)
 
-  q5.Add(transition.NewRegexp("[eE]", q5_1))
-  q5.Add(transition.NewEpsilon(q6))
+  q5.AddFunc(transition.Regexp("[eE]"), q5_1)
+  q5.AddFunc(transition.Epsilon(), q6)
 
-  q5_1.Add(transition.NewRegexp("[+-]?", q5_2))
+  q5_1.AddFunc(transition.Regexp("[+-]?"), q5_2)
 
-  q5_2.Add(transition.NewRegexp("[0-9]", q5_3))
+  q5_2.AddFunc(transition.Regexp("[0-9]"), q5_3)
 
-  q5_3.Add(transition.NewRegexp("[0-9]", q5_3))
-  q5_3.Add(transition.NewEpsilon(q6))
+  q5_3.AddFunc(transition.Regexp("[0-9]"), q5_3)
+  q5_3.AddFunc(transition.Epsilon(), q6)
 
   number := tomato.NewAutomaton(q0, []*tomato.State{q6})
 
@@ -84,21 +84,21 @@ func TestString(t *testing.T) {
   q3 := tomato.NewState()
   q4 := tomato.NewState()
 
-  q0.Add(transition.NewRune('"', q1))
+  q0.AddFunc(transition.Rune('"'), q1)
 
-  q1.Add(transition.NewEpsilon(q2))
-  q1.Add(transition.NewEpsilon(q3))
+  q1.AddFunc(transition.Epsilon(), q2)
+  q1.AddFunc(transition.Epsilon(), q3)
 
-  q2.Add(transition.NewRegexp("[^\\\"]+", q3))
-  q2.Add(transition.NewRune('\\', q2_1))
+  q2.AddFunc(transition.Regexp("[^\\\"]+"), q3)
+  q2.AddFunc(transition.Rune('\\'), q2_1)
 
-  q2_1.Add(transition.NewRegexp("[\"\\/bfnrt]", q3))
-  q2_1.Add(transition.NewRune('u', q2_1_1))
+  q2_1.AddFunc(transition.Regexp("[\"\\/bfnrt]"), q3)
+  q2_1.AddFunc(transition.Rune('u'), q2_1_1)
 
-  q2_1_1.Add(transition.NewRegexp("[0-9a-f]{4}", q3))
+  q2_1_1.AddFunc(transition.Regexp("[0-9a-f]{4}"), q3)
 
-  q3.Add(transition.NewEpsilon(q2))
-  q3.Add(transition.NewRune('"', q4))
+  q3.AddFunc(transition.Epsilon(), q2)
+  q3.AddFunc(transition.Rune('"'), q4)
 
   str := tomato.NewAutomaton(q0, []*tomato.State{q4})
 

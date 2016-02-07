@@ -6,28 +6,17 @@ import (
   "github.com/emersion/tomato"
 )
 
-type runeTransition struct {
-  value rune
-  target *tomato.State
-}
+func Rune(value rune) tomato.TransitionFunc {
+  return func (word string) int {
+    if len(word) == 0 {
+      return -1
+    }
 
-func (t *runeTransition) Recognize(word string) (*tomato.State, int) {
-  if len(word) == 0 {
-    return nil, 0
-  }
+    ch, size := utf8.DecodeRuneInString(word)
+    if ch == value {
+      return size
+    }
 
-  ch, size := utf8.DecodeRuneInString(word)
-  if ch == t.value {
-    return t.target, size
-  }
-
-  return nil, 0
-}
-
-// Create a new transition that recognizes a single character.
-func NewRune(value rune, target *tomato.State) tomato.Transition {
-  return &runeTransition{
-    value: value,
-    target: target,
+    return -1
   }
 }
