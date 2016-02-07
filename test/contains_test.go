@@ -27,10 +27,7 @@ func TestContains(t *testing.T) {
 
   a := tomato.NewAutomaton(q0, []*tomato.State{q2})
 
-  items := []struct{
-    input string
-    recognized bool
-  }{
+  items := []testCase{
     {"ab", true},
     {"abc", true},
     {"cab", true},
@@ -47,13 +44,5 @@ func TestContains(t *testing.T) {
     {"aca", false},
   }
 
-  for _, item := range items {
-    ok, _ := a.Recognize(item.input)
-    if item.recognized && !ok {
-      t.Error("Word '"+item.input+"' not recognized")
-    }
-    if !item.recognized && ok {
-      t.Error("Word '"+item.input+"' recognized")
-    }
-  }
+  testAll(t, a, items)
 }

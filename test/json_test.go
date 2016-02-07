@@ -7,7 +7,7 @@ import (
   "github.com/emersion/tomato/transition"
 )
 
-func TestJsonNumber(t *testing.T) {
+func jsonNumber() *tomato.Automaton {
   q0 := tomato.NewState()
   q1 := tomato.NewState()
   q1_1 := tomato.NewState()
@@ -47,35 +47,10 @@ func TestJsonNumber(t *testing.T) {
   q5_3.AddFunc(transition.Regexp("[0-9]"), q5_3)
   q5_3.AddFunc(transition.Epsilon(), q6)
 
-  number := tomato.NewAutomaton(q0, []*tomato.State{q6})
-
-  items := []struct{
-    input string
-    recognized bool
-  }{
-    {"0", true},
-    {"1", true},
-    {"01", false},
-    {"1.0", true},
-    {"786.632973", true},
-    {"0.367283", true},
-    {"0.0", true},
-    {"67e68", true},
-    {"16E98", true},
-  }
-
-  for _, item := range items {
-    ok, _ := number.Recognize(item.input)
-    if item.recognized && !ok {
-      t.Error("Word '"+item.input+"' not recognized")
-    }
-    if !item.recognized && ok {
-      t.Error("Word '"+item.input+"' recognized")
-    }
-  }
+  return tomato.NewAutomaton(q0, []*tomato.State{q6})
 }
 
-func TestString(t *testing.T) {
+func jsonString() *tomato.Automaton {
   q0 := tomato.NewState()
   q1 := tomato.NewState()
   q2 := tomato.NewState()
@@ -100,12 +75,98 @@ func TestString(t *testing.T) {
   q3.AddFunc(transition.Epsilon(), q2)
   q3.AddFunc(transition.Rune('"'), q4)
 
-  str := tomato.NewAutomaton(q0, []*tomato.State{q4})
+  return tomato.NewAutomaton(q0, []*tomato.State{q4})
+}
 
-  items := []struct{
-    input string
-    recognized bool
-  }{
+func jsonValue(str, number, array, object *tomato.Automaton) *tomato.Automaton {
+  q0 := tomato.NewState()
+  q1 := tomato.NewState()
+
+  q0.Add(transition.NewAutomaton(str, []*tomato.State{q1}))
+  q0.Add(transition.NewAutomaton(number, []*tomato.State{q1}))
+  q0.Add(transition.NewAutomaton(object, []*tomato.State{q1}))
+  q0.Add(transition.NewAutomaton(array, []*tomato.State{q1}))
+  q0.AddFunc(transition.String("true"), q1)
+  q0.AddFunc(transition.String("false"), q1)
+  q0.AddFunc(transition.String("null"), q1)
+
+  return tomato.NewAutomaton(q0, []*tomato.State{q1})
+}
+
+func jsonArray(value *tomato.Automaton) *tomato.Automaton {
+  q0 := tomato.NewState()
+  q1 := tomato.NewState()
+  q2 := tomato.NewState()
+  q3 := tomato.NewState()
+  q4 := tomato.NewState()
+  q5 := tomato.NewState()
+
+  q0.AddFunc(transition.Rune('['), q1)
+
+  q1.AddFunc(transition.Epsilon(), q2)
+  q1.AddFunc(transition.Epsilon(), q4)
+
+  q2.Add(transition.NewAutomaton(value, []*tomato.State{q3}))
+
+  q3.AddFunc(transition.Rune(','), q2)
+  q3.AddFunc(transition.Epsilon(), q4)
+
+  q4.AddFunc(transition.Rune(']'), q5)
+
+  return tomato.NewAutomaton(q0, []*tomato.State{q4})
+}
+
+func jsonObject(str, value *tomato.Automaton) *tomato.Automaton {
+  q0 := tomato.NewState()
+  q1 := tomato.NewState()
+  q2 := tomato.NewState()
+  q3 := tomato.NewState()
+  q4 := tomato.NewState()
+  q5 := tomato.NewState()
+  q6 := tomato.NewState()
+  q7 := tomato.NewState()
+
+  q0.AddFunc(transition.Rune('{'), q1)
+
+  q1.AddFunc(transition.Epsilon(), q2)
+  q1.AddFunc(transition.Epsilon(), q6)
+
+  q2.Add(transition.NewAutomaton(str, []*tomato.State{q3}))
+
+  q3.AddFunc(transition.Rune(':'), q4)
+
+  q4.Add(transition.NewAutomaton(value, []*tomato.State{q5}))
+
+  q5.AddFunc(transition.Rune(','), q2)
+  q5.AddFunc(transition.Epsilon(), q6)
+
+  q6.AddFunc(transition.Rune('}'), q7)
+
+  return tomato.NewAutomaton(q0, []*tomato.State{q7})
+}
+
+func TestJsonNumber(t *testing.T) {
+  number := jsonNumber()
+
+  items := []testCase{
+    {"0", true},
+    {"1", true},
+    {"01", false},
+    {"1.0", true},
+    {"786.632973", true},
+    {"0.367283", true},
+    {"0.0", true},
+    {"67e68", true},
+    {"16E98", true},
+  }
+
+  testAll(t, number, items)
+}
+
+func TestJsonString(t *testing.T) {
+  str := jsonString()
+
+  items := []testCase{
     {"\"\"", true},
     {"\"a\"", true},
     {"\"0\"", true},
@@ -117,13 +178,5 @@ func TestString(t *testing.T) {
     {"\"abc\"\"", false},
   }
 
-  for _, item := range items {
-    ok, _ := str.Recognize(item.input)
-    if item.recognized && !ok {
-      t.Error("Word '"+item.input+"' not recognized")
-    }
-    if !item.recognized && ok {
-      t.Error("Word '"+item.input+"' recognized")
-    }
-  }
+  testAll(t, str, items)
 }

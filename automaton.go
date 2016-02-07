@@ -1,11 +1,14 @@
 package tomato
 
-import "log"
-
 // An automaton recognizes words.
 type Automaton struct {
   root *State
   ends []*State
+}
+
+// Get this automaton's ending states.
+func (a *Automaton) Ends() []*State {
+  return a.ends
 }
 
 // Check if a state is an end for this automaton.
@@ -23,30 +26,44 @@ func (a *Automaton) isEnd(state *State) bool {
   return false
 }
 
-func (a *Automaton) recognize(state *State, word string) (bool, []*State) {
-  if len(word) == 0 && a.isEnd(state) {
-    return true, []*State{state}
+func (a *Automaton) recognize(current *State, word string) (bool, int, []*State) {
+  if len(word) == 0 && a.isEnd(current) {
+    return true, 0, []*State{current}
   }
 
-  for _, child := range state.transitions {
+  var hasNext bool
+  var bestSize int
+  var bestPath []*State
+
+  for _, child := range current.transitions {
     next, size := child.Recognize(word)
-    if next == nil {
+    if next == nil || size < 0 {
       continue
     }
-    log.Println(word, size)
-    ok, path := a.recognize(next, word[size:])
-    if ok {
-      return true, append(path, state)
+
+    ok, processed, rpath := a.recognize(next, word[size:])
+    total := size + processed
+    if ok && (!hasNext || total > bestSize) {
+      hasNext = true
+      bestSize = total
+      bestPath = append(rpath, current)
     }
   }
 
-  return false, []*State{state}
+  if hasNext {
+    return true, bestSize, bestPath
+  }
+
+  return a.isEnd(current), 0, []*State{current}
 }
 
-// Recognize a word.
-// Returns nil if this word is not recognized.
-func (a *Automaton) Recognize(word string) (bool, []*State) {
-  ok, rpath := a.recognize(a.root, word)
+// Recognize a word. A not recognized part can be remaining at the end.
+// Return values:
+// - True if a part of the word has been recognized
+// - The size of the recognized part
+// - The recognition path
+func (a *Automaton) Recognize(word string) (bool, int, []*State) {
+  ok, size, rpath := a.recognize(a.root, word)
 
   // Reverse path
   n := len(rpath)
@@ -55,6 +72,13 @@ func (a *Automaton) Recognize(word string) (bool, []*State) {
     path[i] = rpath[n-i-1]
   }
 
+  return ok, size, path
+}
+
+// Recognize a whole word.
+func (a *Automaton) RecognizeWhole(word string) (bool, []*State) {
+  ok, size, path := a.Recognize(word)
+  ok = (ok && size == len(word))
   return ok, path
 }
 
