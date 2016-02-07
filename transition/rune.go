@@ -12,8 +12,8 @@ type runeTransition struct {
 }
 
 func (t *runeTransition) Recognize(word string) (*tomato.State, int) {
-  if t.value == tomato.Epsilon {
-    return t.target, 0
+  if len(word) == 0 {
+    return nil, 0
   }
 
   ch, size := utf8.DecodeRuneInString(word)

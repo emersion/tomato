@@ -1,5 +1,7 @@
 package tomato
 
+import "log"
+
 // An automaton recognizes words.
 type Automaton struct {
   root *State
@@ -21,9 +23,9 @@ func (a *Automaton) isEnd(state *State) bool {
   return false
 }
 
-func (a *Automaton) recognize(state *State, word string) *State {
-  if len(word) == 0 {
-    return state
+func (a *Automaton) recognize(state *State, word string) (bool, []*State) {
+  if len(word) == 0 && a.isEnd(state) {
+    return true, []*State{state}
   }
 
   for _, child := range state.transitions {
@@ -31,26 +33,29 @@ func (a *Automaton) recognize(state *State, word string) *State {
     if next == nil {
       continue
     }
-
-    last := a.recognize(next, word[size:])
-    if last != nil {
-      return last
+    log.Println(word, size)
+    ok, path := a.recognize(next, word[size:])
+    if ok {
+      return true, append(path, state)
     }
   }
 
-  return nil
+  return false, []*State{state}
 }
 
 // Recognize a word.
 // Returns nil if this word is not recognized.
-func (a *Automaton) Recognize(word string) *State {
-  state := a.recognize(a.root, word)
+func (a *Automaton) Recognize(word string) (bool, []*State) {
+  ok, rpath := a.recognize(a.root, word)
 
-  if a.isEnd(state) {
-    return state
+  // Reverse path
+  n := len(rpath)
+  path := make([]*State, n)
+  for i := 0; i < n; i++ {
+    path[i] = rpath[n-i-1]
   }
 
-  return nil
+  return ok, path
 }
 
 // Create a new automaton, with a starting state and some ending states.

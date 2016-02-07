@@ -48,11 +48,11 @@ func TestContains(t *testing.T) {
   }
 
   for _, item := range items {
-    result := a.Recognize(item.input)
-    if item.recognized && result != q2 {
+    ok, _ := a.Recognize(item.input)
+    if item.recognized && !ok {
       t.Error("Word '"+item.input+"' not recognized")
     }
-    if !item.recognized && result != nil {
+    if !item.recognized && ok {
       t.Error("Word '"+item.input+"' recognized")
     }
   }
