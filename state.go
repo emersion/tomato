@@ -16,6 +16,11 @@ func (s *State) AddFunc(f TransitionFunc, target *State) {
   s.Add(newTransition(f, target))
 }
 
+// Remove all transitions from this state.
+func (s *State) Reset() {
+  s.transitions = nil
+}
+
 // Create a new state.
 func NewState() *State {
   return &State{}

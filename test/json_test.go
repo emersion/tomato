@@ -5,6 +5,7 @@ import (
 
   "github.com/emersion/tomato"
   "github.com/emersion/tomato/transition"
+  "github.com/emersion/tomato/wrapper"
 )
 
 func jsonNumber() *tomato.Automaton {
@@ -78,21 +79,6 @@ func jsonString() *tomato.Automaton {
   return tomato.NewAutomaton(q0, []*tomato.State{q4})
 }
 
-func jsonValue(str, number, array, object *tomato.Automaton) *tomato.Automaton {
-  q0 := tomato.NewState()
-  q1 := tomato.NewState()
-
-  q0.Add(transition.NewAutomaton(str, []*tomato.State{q1}))
-  q0.Add(transition.NewAutomaton(number, []*tomato.State{q1}))
-  q0.Add(transition.NewAutomaton(object, []*tomato.State{q1}))
-  q0.Add(transition.NewAutomaton(array, []*tomato.State{q1}))
-  q0.AddFunc(transition.String("true"), q1)
-  q0.AddFunc(transition.String("false"), q1)
-  q0.AddFunc(transition.String("null"), q1)
-
-  return tomato.NewAutomaton(q0, []*tomato.State{q1})
-}
-
 func jsonArray(value *tomato.Automaton) *tomato.Automaton {
   q0 := tomato.NewState()
   q1 := tomato.NewState()
@@ -113,7 +99,7 @@ func jsonArray(value *tomato.Automaton) *tomato.Automaton {
 
   q4.AddFunc(transition.Rune(']'), q5)
 
-  return tomato.NewAutomaton(q0, []*tomato.State{q4})
+  return tomato.NewAutomaton(q0, []*tomato.State{q5})
 }
 
 func jsonObject(str, value *tomato.Automaton) *tomato.Automaton {
@@ -143,6 +129,35 @@ func jsonObject(str, value *tomato.Automaton) *tomato.Automaton {
   q6.AddFunc(transition.Rune('}'), q7)
 
   return tomato.NewAutomaton(q0, []*tomato.State{q7})
+}
+
+func jsonValue(number, str, array, object *tomato.Automaton) *tomato.Automaton {
+  q0 := tomato.NewState()
+  q1 := tomato.NewState()
+
+  q0.Add(transition.NewAutomaton(str, []*tomato.State{q1}))
+  q0.Add(transition.NewAutomaton(number, []*tomato.State{q1}))
+  q0.Add(transition.NewAutomaton(object, []*tomato.State{q1}))
+  q0.Add(transition.NewAutomaton(array, []*tomato.State{q1}))
+  q0.AddFunc(transition.String("true"), q1)
+  q0.AddFunc(transition.String("false"), q1)
+  q0.AddFunc(transition.String("null"), q1)
+
+  return tomato.NewAutomaton(q0, []*tomato.State{q1})
+}
+
+func json() (number, str, array, object, value *tomato.Automaton) {
+  valueWrapper, setValue := wrapper.New(1)
+
+  number = jsonNumber()
+  str = jsonString()
+  array = jsonArray(valueWrapper)
+  object = jsonObject(str, valueWrapper)
+  value = jsonValue(number, str, array, object)
+
+  setValue(value)
+
+  return
 }
 
 func TestJsonNumber(t *testing.T) {
@@ -179,4 +194,41 @@ func TestJsonString(t *testing.T) {
   }
 
   testAll(t, str, items)
+}
+
+func TestJsonValue(t *testing.T) {
+  _, _, array, object, _ := json()
+
+  testAll(t, array, []testCase{
+    {"[]", true},
+    {"[\"a\"]", true},
+    {"[\"a\",\"b\"]", true},
+    {"[\"a\",\"b\",\"c\"]", true},
+    {"[0,1,2]", true},
+    {"[", false},
+    {"[][", false},
+    {"[a]", false},
+    {"[\"a]", false},
+    {"[\"a\",]", false},
+    {"[\"a\",\"b\",]", false},
+    {"[\"a\"\"b\"]", false},
+  })
+
+  testAll(t, object, []testCase{
+    {"{}", true},
+    {"{\"a\":0}", true},
+    {"{\"a\":0,\"b\":1}", true},
+    {"{\"a\":\"b\",\"c\":\"d\"}", true},
+    {"{\"a\":\"b\",\"c\":4}", true},
+    {"{\"a\":[0,1],\"c\":[2,3]}", true},
+    {"{\"a\":{\"a\":true,\"b\":false},\"c\":null}", true},
+    {"{", false},
+    {"}", false},
+    {"{a}", false},
+    {"{\"a:0}", false},
+    {"{\"a\"0}", false},
+    {"{\"a\"}", false},
+    {"{\"a\":0,}", false},
+    {"{\"a\":0,\"b\":1,}", false},
+  })
 }
