@@ -21,32 +21,32 @@ func jsonNumber() *tomato.Automaton {
   q5_3 := tomato.NewState()
   q6 := tomato.NewState()
 
-  q0.AddFunc(transition.Rune('-'), q1)
-  q0.AddFunc(transition.Epsilon(), q1)
+  q0.Add(transition.NewRune('-', q1))
+  q0.Add(transition.NewEpsilon(q1))
 
-  q1.AddFunc(transition.Rune('0'), q2)
-  q1.AddFunc(transition.Regexp("[1-9]"), q1_1)
+  q1.Add(transition.NewRune('0', q2))
+  q1.Add(transition.NewRegexp("[1-9]", q1_1))
 
-  q1_1.AddFunc(transition.Regexp("[0-9]"), q1_1)
-  q1_1.AddFunc(transition.Epsilon(), q2)
+  q1_1.Add(transition.NewRegexp("[0-9]", q1_1))
+  q1_1.Add(transition.NewEpsilon(q2))
 
-  q2.AddFunc(transition.Epsilon(), q5)
-  q2.AddFunc(transition.Rune('.'), q3)
+  q2.Add(transition.NewEpsilon(q5))
+  q2.Add(transition.NewRune('.', q3))
 
-  q3.AddFunc(transition.Regexp("[0-9]"), q4)
+  q3.Add(transition.NewRegexp("[0-9]", q4))
 
-  q4.AddFunc(transition.Regexp("[0-9]"), q4)
-  q4.AddFunc(transition.Epsilon(), q5)
+  q4.Add(transition.NewRegexp("[0-9]", q4))
+  q4.Add(transition.NewEpsilon(q5))
 
-  q5.AddFunc(transition.Regexp("[eE]"), q5_1)
-  q5.AddFunc(transition.Epsilon(), q6)
+  q5.Add(transition.NewRegexp("[eE]", q5_1))
+  q5.Add(transition.NewEpsilon(q6))
 
-  q5_1.AddFunc(transition.Regexp("[+-]?"), q5_2)
+  q5_1.Add(transition.NewRegexp("[+-]?", q5_2))
 
-  q5_2.AddFunc(transition.Regexp("[0-9]"), q5_3)
+  q5_2.Add(transition.NewRegexp("[0-9]", q5_3))
 
-  q5_3.AddFunc(transition.Regexp("[0-9]"), q5_3)
-  q5_3.AddFunc(transition.Epsilon(), q6)
+  q5_3.Add(transition.NewRegexp("[0-9]", q5_3))
+  q5_3.Add(transition.NewEpsilon(q6))
 
   return tomato.NewAutomaton(q0, []*tomato.State{q6})
 }
@@ -60,21 +60,21 @@ func jsonString() *tomato.Automaton {
   q3 := tomato.NewState()
   q4 := tomato.NewState()
 
-  q0.AddFunc(transition.Rune('"'), q1)
+  q0.Add(transition.NewRune('"', q1))
 
-  q1.AddFunc(transition.Epsilon(), q2)
-  q1.AddFunc(transition.Epsilon(), q3)
+  q1.Add(transition.NewEpsilon(q2))
+  q1.Add(transition.NewEpsilon(q3))
 
-  q2.AddFunc(transition.Regexp("[^\\\"]+"), q3)
-  q2.AddFunc(transition.Rune('\\'), q2_1)
+  q2.Add(transition.NewRegexp("[^\\\"]+", q3))
+  q2.Add(transition.NewRune('\\', q2_1))
 
-  q2_1.AddFunc(transition.Regexp("[\"\\/bfnrt]"), q3)
-  q2_1.AddFunc(transition.Rune('u'), q2_1_1)
+  q2_1.Add(transition.NewRegexp("[\"\\/bfnrt]", q3))
+  q2_1.Add(transition.NewRune('u', q2_1_1))
 
-  q2_1_1.AddFunc(transition.Regexp("[0-9a-f]{4}"), q3)
+  q2_1_1.Add(transition.NewRegexp("[0-9a-f]{4}", q3))
 
-  q3.AddFunc(transition.Epsilon(), q2)
-  q3.AddFunc(transition.Rune('"'), q4)
+  q3.Add(transition.NewEpsilon(q2))
+  q3.Add(transition.NewRune('"', q4))
 
   return tomato.NewAutomaton(q0, []*tomato.State{q4})
 }
@@ -87,17 +87,17 @@ func jsonArray(value *tomato.Automaton) *tomato.Automaton {
   q4 := tomato.NewState()
   q5 := tomato.NewState()
 
-  q0.AddFunc(transition.Rune('['), q1)
+  q0.Add(transition.NewRune('[', q1))
 
-  q1.AddFunc(transition.Epsilon(), q2)
-  q1.AddFunc(transition.Epsilon(), q4)
+  q1.Add(transition.NewEpsilon(q2))
+  q1.Add(transition.NewEpsilon(q4))
 
   q2.Add(transition.NewAutomaton(value, []*tomato.State{q3}))
 
-  q3.AddFunc(transition.Rune(','), q2)
-  q3.AddFunc(transition.Epsilon(), q4)
+  q3.Add(transition.NewRune(',', q2))
+  q3.Add(transition.NewEpsilon(q4))
 
-  q4.AddFunc(transition.Rune(']'), q5)
+  q4.Add(transition.NewRune(']', q5))
 
   return tomato.NewAutomaton(q0, []*tomato.State{q5})
 }
@@ -112,21 +112,21 @@ func jsonObject(str, value *tomato.Automaton) *tomato.Automaton {
   q6 := tomato.NewState()
   q7 := tomato.NewState()
 
-  q0.AddFunc(transition.Rune('{'), q1)
+  q0.Add(transition.NewRune('{', q1))
 
-  q1.AddFunc(transition.Epsilon(), q2)
-  q1.AddFunc(transition.Epsilon(), q6)
+  q1.Add(transition.NewEpsilon(q2))
+  q1.Add(transition.NewEpsilon(q6))
 
   q2.Add(transition.NewAutomaton(str, []*tomato.State{q3}))
 
-  q3.AddFunc(transition.Rune(':'), q4)
+  q3.Add(transition.NewRune(':', q4))
 
   q4.Add(transition.NewAutomaton(value, []*tomato.State{q5}))
 
-  q5.AddFunc(transition.Rune(','), q2)
-  q5.AddFunc(transition.Epsilon(), q6)
+  q5.Add(transition.NewRune(',', q2))
+  q5.Add(transition.NewEpsilon(q6))
 
-  q6.AddFunc(transition.Rune('}'), q7)
+  q6.Add(transition.NewRune('}', q7))
 
   return tomato.NewAutomaton(q0, []*tomato.State{q7})
 }
@@ -139,9 +139,9 @@ func jsonValue(number, str, array, object *tomato.Automaton) *tomato.Automaton {
   q0.Add(transition.NewAutomaton(number, []*tomato.State{q1}))
   q0.Add(transition.NewAutomaton(object, []*tomato.State{q1}))
   q0.Add(transition.NewAutomaton(array, []*tomato.State{q1}))
-  q0.AddFunc(transition.String("true"), q1)
-  q0.AddFunc(transition.String("false"), q1)
-  q0.AddFunc(transition.String("null"), q1)
+  q0.Add(transition.NewString("true", q1))
+  q0.Add(transition.NewString("false", q1))
+  q0.Add(transition.NewString("null", q1))
 
   return tomato.NewAutomaton(q0, []*tomato.State{q1})
 }

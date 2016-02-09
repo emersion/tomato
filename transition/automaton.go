@@ -23,6 +23,17 @@ func (tr *automatonTransition) Recognize(word string) (*tomato.State, int) {
   return nil, -1
 }
 
+func (tr *automatonTransition) Targets() []*tomato.State {
+  return tr.targets
+}
+
+func (tr *automatonTransition) Duplicate(targets ...*tomato.State) tomato.Transition {
+  if len(targets) != len(tr.automaton.Ends()) {
+    panic("Automaton transition targets must have same length as automaton ending states")
+  }
+  return NewAutomaton(tr.automaton, targets)
+}
+
 func NewAutomaton(a *tomato.Automaton, targets []*tomato.State) tomato.Transition {
   if len(a.Ends()) != len(targets) {
     panic("Automaton transition targets must have same length as automaton ending states")

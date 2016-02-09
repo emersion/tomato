@@ -6,6 +6,11 @@ type Automaton struct {
   ends []*State
 }
 
+// Get this automaton's initial state.
+func (a *Automaton) Root() *State {
+  return a.root
+}
+
 // Get this automaton's ending states.
 func (a *Automaton) Ends() []*State {
   return a.ends

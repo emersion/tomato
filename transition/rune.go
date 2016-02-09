@@ -6,7 +6,7 @@ import (
   "github.com/emersion/tomato"
 )
 
-func Rune(value rune) tomato.TransitionFunc {
+func Rune(value rune) Func {
   return func (word string) int {
     if len(word) == 0 {
       return -1
@@ -19,4 +19,8 @@ func Rune(value rune) tomato.TransitionFunc {
 
     return -1
   }
+}
+
+func NewRune(value rune, target *tomato.State) tomato.Transition {
+  return NewFunc(Rune(value), target)
 }

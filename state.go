@@ -11,14 +11,14 @@ func (s *State) Add(tr Transition) {
   s.transitions = append(s.transitions, tr)
 }
 
-// Add a transition from this state to another one through a specified function.
-func (s *State) AddFunc(f TransitionFunc, target *State) {
-  s.Add(newTransition(f, target))
-}
-
 // Remove all transitions from this state.
 func (s *State) Reset() {
   s.transitions = nil
+}
+
+// Get all transitions from this state.
+func (s *State) Transitions() []Transition {
+  return s.transitions
 }
 
 // Create a new state.

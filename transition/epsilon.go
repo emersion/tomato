@@ -5,8 +5,13 @@ import (
 )
 
 // Create a transition function that recognizes the empty word.
-func Epsilon() tomato.TransitionFunc {
+func Epsilon() Func {
   return func (word string) int {
     return 0
   }
+}
+
+// Create a transition that recognizes the empty word.
+func NewEpsilon(target *tomato.State) tomato.Transition {
+  return NewFunc(Epsilon(), target)
 }
